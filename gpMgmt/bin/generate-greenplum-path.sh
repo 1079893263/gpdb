@@ -3,7 +3,7 @@
 if [ x$1 != x ] ; then
     GPHOME_PATH=$1
 else
-    GPHOME_PATH="\`pwd\`"
+    GPHOME_PATH="\$( cd \"\$( dirname \"\${BASH_SOURCE[0]}\" )\" >/dev/null 2>&1 && pwd )"
 fi
 
 if [ "$2" = "ISO" ] ; then
@@ -29,28 +29,12 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
-cat << EOF
-
-# Replace with symlink path if it is present and correct
-if [ -h \${GPHOME}/../greenplum-db ]; then
-    GPHOME_BY_SYMLINK=\$(cd \${GPHOME}/../greenplum-db/ && pwd -P)
-    if [ x"\${GPHOME_BY_SYMLINK}" = x"\${GPHOME}" ]; then
-        GPHOME=\$(cd \${GPHOME}/../greenplum-db/ && pwd -L)/.
-    fi
-    unset GPHOME_BY_SYMLINK
-fi
-EOF
-
 cat <<EOF
 
 PYTHONHOME="\${GPHOME}/ext/python"
-export PYTHONHOME
 PYTHONPATH=\${GPHOME}/lib/python
-
 PATH=\${GPHOME}/bin:\${PYTHONHOME}/bin:\${PATH}
-
 LD_LIBRARY_PATH=\${GPHOME}/lib:\${PYTHONHOME}/lib:\${LD_LIBRARY_PATH-}
-export LD_LIBRARY_PATH
 EOF
 
 # AIX uses yet another library path variable
@@ -67,18 +51,18 @@ fi
 
 # openssl configuration file path
 cat <<EOF
+
 if [ -e "\$GPHOME/etc/openssl.cnf" ]; then
-OPENSSL_CONF=\$GPHOME/etc/openssl.cnf
-export OPENSSL_CONF
+    OPENSSL_CONF=\$GPHOME/etc/openssl.cnf
 fi
 EOF
 
 cat <<EOF
+
 export GPHOME
 export PATH
-EOF
-
-cat <<EOF
+export PYTHONHOME
 export PYTHONPATH
+export LD_LIBRARY_PATH
+export OPENSSL_CONF
 EOF
-
